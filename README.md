@@ -1,0 +1,2 @@
+# drandc
+Dominion Randomizer CLI!
