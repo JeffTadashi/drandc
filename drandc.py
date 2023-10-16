@@ -14,8 +14,21 @@ console = Console()
 SETNAME_TO_YAMLNAME = {
     "base": "base-set-2.yaml",
     "intrigue": "intrigue-2.yaml",
+    "seaside": "seaside-2.yaml",
+    "alchemy": "alchemy.yaml",
+    "prosperity": "prosperity-2.yaml",
+    "cornucopia": "cornucopia.yaml",
     "hinterlands": "hinterlands-2.yaml",
-    "empires": "empires.yaml"
+    "dark_ages": "dark-ages.yaml",
+    "guilds": "guilds.yaml",
+    "adventures": "adventures.yaml",
+    "empires": "empires.yaml",
+    "nocturne": "nocturne.yaml",
+    "renaissance": "renaissance.yaml",
+    "menagerie": "menagerie.yaml",
+    "allies": "allies.yaml",
+    "plunder": "plunder.yaml",
+    "promos": "promos.yaml"
     }
 
 
@@ -28,15 +41,6 @@ landscapes:
    [list of landscapes] - card has key/value of set, and key/value of the type of landscape
 
 This list will be modified/deleted to track what cards were taken. Those cards will be "moved" to results.
-'''
-
-'''
-(OLD TO BE DELETED)
-sets = {}
-for k, v in ARGUMENT_NAME_TO_YAML_SET.items():
-    set_filepath = pathlib.Path.cwd() / "sets" / v
-    with open(set_filepath, 'r') as file:
-        sets[k] = yaml.safe_load(file)
 '''
 randpile = {
     "kingdoms": [],
@@ -70,21 +74,36 @@ def main(argv):
     parser.add_argument('-k','--kingdom', type=int, help='COMING SOON') ##TODO: these have to be picked last
     parser.add_argument('-b','--base', type=int, help='COMING SOON')
     parser.add_argument('--intrigue', type=int, help='COMING SOON')
+    parser.add_argument('--seaside', type=int, help='COMING SOON')
+    parser.add_argument('--alchemy', type=int, help='COMING SOON')
+    parser.add_argument('--prosperity', type=int, help='COMING SOON')
+    parser.add_argument('--cornucopia', type=int, help='COMING SOON')
     parser.add_argument('--hinterlands', type=int, help='COMING SOON')
+    parser.add_argument('--dark-ages', type=int, help='COMING SOON')
+    parser.add_argument('--guilds', type=int, help='COMING SOON')
+    parser.add_argument('--adventures', type=int, help='COMING SOON')
     parser.add_argument('--empires', type=int, help='COMING SOON')
+    parser.add_argument('--nocturne', type=int, help='COMING SOON')
+    parser.add_argument('--renaissance', type=int, help='COMING SOON')
+    parser.add_argument('--menagerie', type=int, help='COMING SOON')
+    parser.add_argument('--allies', type=int, help='COMING SOON')
+    parser.add_argument('--plunder', type=int, help='COMING SOON')
+    parser.add_argument('--promos', type=int, help='COMING SOON')
+    parser.add_argument('-e', '--event', type=int, help='COMING SOON') #TODO
+    parser.add_argument('--event-adventures', type=int, help='COMING SOON')
+    parser.add_argument('--event-empires', type=int, help='COMING SOON')
+    parser.add_argument('--event-menagerie', type=int, help='COMING SOON')
+    parser.add_argument('--event-plunder', type=int, help='COMING SOON')
     args = parser.parse_args()
 
+
+
+    #################################
+    # PICK THE CARDS
+    #################################
     """
-    TODO: nest in "kingdom" and "landscape"
-    TODO: the results
-    KINGDOM CARDS
-    For each set, select the # of cards as defined by the argument value
-    Resulting data will be in the results dict (titled sets), of cardname -> set, such as:
-        results = {
-            'Militia': 'Base'
-            'Shanty Town': 'Intrigue'
-        }
-    
+    GET KINGDOM AND LANDSCAPES!
+
     PICKED PILES: NEW WAY:
         results = {
             kingdoms:
@@ -95,6 +114,7 @@ def main(argv):
         "kingdoms": [],
         "landscapes": []
     }
+    # PICK SET-SPECIFIC KINGDOM CARDS
     for setname in SETNAME_TO_YAMLNAME:
         # This is so we can get args.base, args.intrigue, etc... programatically
         set_num_kcards = getattr(args, setname)
@@ -110,32 +130,54 @@ def main(argv):
             for kcard in picked_kcards:
                 pickedpiles["kingdoms"].append(kcard)
                 randpile["kingdoms"].remove(kcard)
+    # PICK ANY KINGDOM CARDS (TODO)
+
+    # PICK SET-SPECIFIC EVENTS
+    for setname in SETNAME_TO_YAMLNAME:
+        # Check if attribute of events_setname exists (from arguments)
+        if hasattr(args, f'event_{setname}'):
+            # Now we can check if the attribute has a non-zero value
+            set_num_events = getattr(args, f'event_{setname}')
+            if set_num_events:
+                # First, make sub-list of landscapes that matches this set and type
+                sublist = []
+                for landscape in randpile["landscapes"]:
+                    if landscape["set"] == setname and landscape["type"] == "event":
+                        sublist.append(landscape)
+                # Next, pick the total random landscapes needed from this sublist
+                picked_landscapes = random.sample(sublist, set_num_events)
+                # Put these landscapes into the pickedpiles, and remove from randpiles
+                for landscape in picked_landscapes:
+                    pickedpiles["landscapes"].append(landscape)
+                    randpile["landscapes"].remove(landscape)       
 
 
-            '''
-            (OLD WAY)
-            # Argument for this set was provided with a non-zero number, so lets pick some cards!
-            picked_cards = random.sample(sets[setname]["cards"], set_num_cards)
-            for card in picked_cards:
-                # Adding just the basic card info into results dict
-                results[card["name"]] = setname.title()
-            '''
 
-
+    #################################
+    # PRINTING RESULTS
+    #################################
 
 
     console.print(Panel.fit("Picked Cards"))
     # TODO: COLOR based on victory/treasure, etc
     console.print("")
-    console.print("     ─━═Kingdom Cards═━─     ", style='bold cyan')
+    console.print("        ─━═Kingdom Cards═━─        ", style='bold cyan')
     n = 1
     for kcard in pickedpiles["kingdoms"]:
         # <3 and <20 for spacing. Num has to be combined with . old fashioned way for this to work
-        console.print(f"{str(n) + '.' : <3} {kcard['name'] : <20} ({kcard['set'].title()})")
+        console.print(f"{str(n) + '.' : <3} {kcard['name'] : <27} ({kcard['set'].title()})")
         n += 1
     console.print("")
 
 
+    console.print("")
+    console.print("        ─━═Landscapes═━─        ", style='bold cyan')
+    n = 1
+    for landscape in pickedpiles["landscapes"]:
+        # <3 and <20 for spacing. Num has to be combined with . old fashioned way for this to work
+        console.print(f"{str(n) + '.' : <3} {landscape['name'] : <27} ({landscape['set'].title()})")
+        n += 1
+    console.print("")
 
 
     console.print(Panel.fit("Copy/Paste Format for Online"))
@@ -147,7 +189,7 @@ def main(argv):
         else:
             comstring += f", {kcard['name']}"
     console.print(comstring)
-
+    # TODO Landscapes to this
     
 
 
