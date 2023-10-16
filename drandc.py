@@ -31,8 +31,19 @@ SETNAME_TO_YAMLNAME = {
     "promos": "promos.yaml"
     }
 
+# This is needed to iterate over landscape types
+# Notably, the YAML files use "events" whereas this script will use "event", etc
+LANDSCAPE_NAMES_TO_NAME = {
+    "events": "event",
+    "landmarks": "landmark", 
+    "projects": "project", 
+    "ways": "way", 
+    "traits": "trait"
+}
 
-# Create master card-like-things dict
+
+
+# Create master randomizer piles
 '''
 Create Randomizer Piles (one for Kingdom, one for Landscape)
 kingdoms:
@@ -40,9 +51,10 @@ kingdoms:
 landscapes:
    [list of landscapes] - card has key/value of set, and key/value of the type of landscape
 
-This list will be modified/deleted to track what cards were taken. Those cards will be "moved" to results.
+This list will be modified/deleted to track what cards were taken. Those cards will be "moved" to pickedpiles.
+TODO: rename randpile to randpiles
 '''
-randpile = {
+randpile = { 
     "kingdoms": [],
     "landscapes": []
 }
@@ -56,12 +68,12 @@ for setname, yamlname in SETNAME_TO_YAMLNAME.items():
         randpile["kingdoms"].append(kcard)
     # Iterate over each landscape card type, and copy into randpile while adding key/value 
     # for the set name itself, and the key/value of the landscape type
-    if 'events' in set:
-        for landscape in set["events"]:
-            landscape["set"] = setname
-            landscape["type"] = "event"
-            randpile["landscapes"].append(landscape)
-    # TODO for landmarks, ways, projects
+    for name_p, name_s in LANDSCAPE_NAMES_TO_NAME.items():
+        if name_p in set:
+            for landscape in set[name_p]:
+                landscape["set"] = setname
+                landscape["type"] = name_s
+                randpile["landscapes"].append(landscape)
 
 
 
@@ -89,11 +101,12 @@ def main(argv):
     parser.add_argument('--allies', type=int, help='COMING SOON')
     parser.add_argument('--plunder', type=int, help='COMING SOON')
     parser.add_argument('--promos', type=int, help='COMING SOON')
-    parser.add_argument('-e', '--event', type=int, help='COMING SOON') #TODO
+    parser.add_argument('-e', '--event', type=int, help='COMING SOON') #TODO: these have to be picked last
     parser.add_argument('--event-adventures', type=int, help='COMING SOON')
     parser.add_argument('--event-empires', type=int, help='COMING SOON')
     parser.add_argument('--event-menagerie', type=int, help='COMING SOON')
     parser.add_argument('--event-plunder', type=int, help='COMING SOON')
+    parser.add_argument('--landmark', type=int, help='COMING SOON')
     args = parser.parse_args()
 
 
@@ -149,9 +162,28 @@ def main(argv):
                 # Put these landscapes into the pickedpiles, and remove from randpiles
                 for landscape in picked_landscapes:
                     pickedpiles["landscapes"].append(landscape)
-                    randpile["landscapes"].remove(landscape)       
+                    randpile["landscapes"].remove(landscape)
+    
+    # PICK ANY EVENTS (TODO)
 
+    # PICK LANDMARKS
+    # Check if the landmark attribute is non-zero
+    set_num_landmarks = getattr(args, 'landmark')
+    if set_num_landmarks:
+        # First, make sub-list of landscapes that matches this set and type
+        sublist = []
+        for landscape in randpile["landscapes"]:
+            # Landmarks only in empires. Hard coded below
+            if landscape["set"] == "empires" and landscape["type"] == "landmark":
+                sublist.append(landscape)
+        # Next, pick the total random landscapes needed from this sublist
+        picked_landscapes = random.sample(sublist, set_num_landmarks)
+        # Put these landscapes into the pickedpiles, and remove from randpiles
+        for landscape in picked_landscapes:
+            pickedpiles["landscapes"].append(landscape)
+            randpile["landscapes"].remove(landscape)
 
+    # TODO: pick project, way, trait
 
     #################################
     # PRINTING RESULTS
@@ -164,8 +196,14 @@ def main(argv):
     console.print("        ─━═Kingdom Cards═━─        ", style='bold cyan')
     n = 1
     for kcard in pickedpiles["kingdoms"]:
+        # Set color. For multi-types, the first chosen here is the priority color
+        if kcard['isTreasure']: color = "yellow"
+        elif kcard['isAttack']: color = "red"
+        elif kcard['isReaction']: color = "cyan"
+        elif kcard['isVictory']: color = "green"
+        else: color = "white"
         # <3 and <20 for spacing. Num has to be combined with . old fashioned way for this to work
-        console.print(f"{str(n) + '.' : <3} {kcard['name'] : <27} ({kcard['set'].title()})")
+        console.print(f"{str(n) + '.' : <3} [{color}]{kcard['name'] : <27}[/{color}] ({kcard['set'].title()})")
         n += 1
     console.print("")
 
@@ -174,10 +212,17 @@ def main(argv):
     console.print("        ─━═Landscapes═━─        ", style='bold cyan')
     n = 1
     for landscape in pickedpiles["landscapes"]:
-        # <3 and <20 for spacing. Num has to be combined with . old fashioned way for this to work
-        console.print(f"{str(n) + '.' : <3} {landscape['name'] : <27} ({landscape['set'].title()})")
+        # Set color, if a non-event landscape
+        if landscape['type'] == 'landmark': color = "green"
+        elif landscape['type'] == 'project': color = "red"
+        elif landscape['type'] == 'way': color = "cyan"
+        elif landscape['type'] == 'trait': color = "magenta"
+        else: color = "white"
+        # <3 and <27 for spacing. Num has to be combined with . old fashioned way for this to work
+        console.print(f"{str(n) + '.' : <3} [{color}]{landscape['name'] : <27}[/{color}] ({landscape['set'].title()})")
         n += 1
     console.print("")
+    # TODO: Color if project, way, trait, landmark
 
 
     console.print(Panel.fit("Copy/Paste Format for Online"))
@@ -188,8 +233,13 @@ def main(argv):
             comstring = f"{kcard['name']}"
         else:
             comstring += f", {kcard['name']}"
+    for landscape in pickedpiles["landscapes"]:
+        if not comstring:
+            # If first entry, don't add comma
+            comstring = f"{landscape['name']}"
+        else:
+            comstring += f", {landscape['name']}"
     console.print(comstring)
-    # TODO Landscapes to this
     
 
 
