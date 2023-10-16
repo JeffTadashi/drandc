@@ -99,7 +99,6 @@ def main(argv):
         # This is so we can get args.base, args.intrigue, etc... programatically
         set_num_kcards = getattr(args, setname)
         if set_num_kcards:
-            # TODO New way
             # First, make sub-list of kcards that matches this set
             sublist = []
             for kcard in randpile["kingdoms"]:
@@ -122,28 +121,31 @@ def main(argv):
                 results[card["name"]] = setname.title()
             '''
 
-    console.print(pickedpiles)
-    console.print(randpile)
-    sys.exit()    
+
 
 
     console.print(Panel.fit("Picked Cards"))
     # TODO: COLOR based on victory/treasure, etc
+    console.print("")
+    console.print("     ─━═Kingdom Cards═━─     ", style='bold cyan')
     n = 1
-    for res_card, res_set in results.items():
+    for kcard in pickedpiles["kingdoms"]:
         # <3 and <20 for spacing. Num has to be combined with . old fashioned way for this to work
-        console.print(f"{str(n) + '.' : <3} {res_card : <20} ({res_set})")
+        console.print(f"{str(n) + '.' : <3} {kcard['name'] : <20} ({kcard['set'].title()})")
         n += 1
+    console.print("")
+
+
 
 
     console.print(Panel.fit("Copy/Paste Format for Online"))
     comstring = ''
-    for res_card in results:
+    for kcard in pickedpiles["kingdoms"]:
         if not comstring:
             # If first entry, don't add comma
-            comstring = f"{res_card}"
+            comstring = f"{kcard['name']}"
         else:
-            comstring += f", {res_card}"
+            comstring += f", {kcard['name']}"
     console.print(comstring)
 
     
