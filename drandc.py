@@ -57,10 +57,20 @@ def main(argv):
     console.print(Panel.fit("Picked Cards"))
     n = 1
     for res_card, res_set in results.items():
-        console.print(f"{n}. {res_card : <20} ({res_set})")
+        # <3 and <20 for spacing. Num has to be combined with . old fashioned way for this to work
+        console.print(f"{str(n) + '.' : <3} {res_card : <20} ({res_set})")
         n += 1
 
 
+    console.print(Panel.fit("Copy/Paste Format for Online"))
+    comstring = ''
+    for res_card in results:
+        if not comstring:
+            # If first entry, don't add comma
+            comstring = f"{res_card}"
+        else:
+            comstring += f", {res_card}"
+    console.print(comstring)
 
     
 
