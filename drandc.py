@@ -52,9 +52,8 @@ landscapes:
    [list of landscapes] - card has key/value of set, and key/value of the type of landscape
 
 This list will be modified/deleted to track what cards were taken. Those cards will be "moved" to pickedpiles.
-TODO: rename randpile to randpiles
 '''
-randpile = { 
+randpiles = { 
     "kingdoms": [],
     "landscapes": []
 }
@@ -62,18 +61,18 @@ for setname, yamlname in SETNAME_TO_YAMLNAME.items():
     set_filepath = pathlib.Path.cwd() / "sets" / yamlname
     with open(set_filepath, 'r') as file:
         set = yaml.safe_load(file)
-    # Iterate over each kingdom card, and copy into randpile while adding key/value for the set name itself
+    # Iterate over each kingdom card, and copy into randpiles while adding key/value for the set name itself
     for kcard in set["cards"]:
         kcard["set"] = setname
-        randpile["kingdoms"].append(kcard)
-    # Iterate over each landscape card type, and copy into randpile while adding key/value 
+        randpiles["kingdoms"].append(kcard)
+    # Iterate over each landscape card type, and copy into randpiles while adding key/value 
     # for the set name itself, and the key/value of the landscape type
     for name_p, name_s in LANDSCAPE_NAMES_TO_NAME.items():
         if name_p in set:
             for landscape in set[name_p]:
                 landscape["set"] = setname
                 landscape["type"] = name_s
-                randpile["landscapes"].append(landscape)
+                randpiles["landscapes"].append(landscape)
 
 
 
@@ -83,7 +82,7 @@ for setname, yamlname in SETNAME_TO_YAMLNAME.items():
 def main(argv):
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-k','--kingdom', type=int, help='COMING SOON') ##TODO: these have to be picked last
+    parser.add_argument('-k','--kingdom', type=int, help='COMING SOON')
     parser.add_argument('-b','--base', type=int, help='COMING SOON')
     parser.add_argument('--intrigue', type=int, help='COMING SOON')
     parser.add_argument('--seaside', type=int, help='COMING SOON')
@@ -101,6 +100,7 @@ def main(argv):
     parser.add_argument('--allies', type=int, help='COMING SOON')
     parser.add_argument('--plunder', type=int, help='COMING SOON')
     parser.add_argument('--promos', type=int, help='COMING SOON')
+    parser.add_argument('-l', '--landscape', type=int, help='COMING SOON') #TODO: these have to be picked last (beyond events)
     parser.add_argument('-e', '--event', type=int, help='COMING SOON') #TODO: these have to be picked last
     parser.add_argument('--event-adventures', type=int, help='COMING SOON')
     parser.add_argument('--event-empires', type=int, help='COMING SOON')
@@ -118,7 +118,7 @@ def main(argv):
     GET KINGDOM AND LANDSCAPES!
 
     PICKED PILES: NEW WAY:
-        results = {
+        pickedpiles = {
             kingdoms:
             landscapes:
         }
@@ -134,7 +134,7 @@ def main(argv):
         if set_num_kcards:
             # First, make sub-list of kcards that matches this set
             sublist = []
-            for kcard in randpile["kingdoms"]:
+            for kcard in randpiles["kingdoms"]:
                 if kcard["set"] == setname:
                     sublist.append(kcard)
             # Next, pick the total random cards needed from this sublist
@@ -142,8 +142,17 @@ def main(argv):
             # Put these kcards into the pickedpiles, and remove from randpiles
             for kcard in picked_kcards:
                 pickedpiles["kingdoms"].append(kcard)
-                randpile["kingdoms"].remove(kcard)
-    # PICK ANY KINGDOM CARDS (TODO)
+                randpiles["kingdoms"].remove(kcard)
+
+    # PICK ANY KINGDOM CARDS
+    num_kcards = getattr(args, "kingdom")
+    if num_kcards:
+        # Next, pick the total random kcards needed from the remaining randpile
+        picked_kcards = random.sample(randpiles["kingdoms"], num_kcards)
+        # Put these kcards into the pickedpiles, and remove from randpiles
+        for kcard in picked_kcards:
+            pickedpiles["kingdoms"].append(kcard)
+            randpiles["kingdoms"].remove(kcard)
 
     # PICK SET-SPECIFIC EVENTS
     for setname in SETNAME_TO_YAMLNAME:
@@ -154,7 +163,7 @@ def main(argv):
             if set_num_events:
                 # First, make sub-list of landscapes that matches this set and type
                 sublist = []
-                for landscape in randpile["landscapes"]:
+                for landscape in randpiles["landscapes"]:
                     if landscape["set"] == setname and landscape["type"] == "event":
                         sublist.append(landscape)
                 # Next, pick the total random landscapes needed from this sublist
@@ -162,50 +171,49 @@ def main(argv):
                 # Put these landscapes into the pickedpiles, and remove from randpiles
                 for landscape in picked_landscapes:
                     pickedpiles["landscapes"].append(landscape)
-                    randpile["landscapes"].remove(landscape)
+                    randpiles["landscapes"].remove(landscape)
     
     # PICK ANY EVENTS (TODO)
 
     # PICK LANDMARKS
+    # (Note: only in Empires)
     # Check if the landmark attribute is non-zero
-    set_num_landmarks = getattr(args, 'landmark')
-    if set_num_landmarks:
-        # First, make sub-list of landscapes that matches this set and type
+    num_landmarks = getattr(args, 'landmark')
+    if num_landmarks:
+        # First, make sub-list of landscapes that matches this type
         sublist = []
-        for landscape in randpile["landscapes"]:
-            # Landmarks only in empires. Hard coded below
-            if landscape["set"] == "empires" and landscape["type"] == "landmark":
+        for landscape in randpiles["landscapes"]:
+            if landscape["type"] == "landmark":
                 sublist.append(landscape)
         # Next, pick the total random landscapes needed from this sublist
-        picked_landscapes = random.sample(sublist, set_num_landmarks)
+        picked_landscapes = random.sample(sublist, num_landmarks)
         # Put these landscapes into the pickedpiles, and remove from randpiles
         for landscape in picked_landscapes:
             pickedpiles["landscapes"].append(landscape)
-            randpile["landscapes"].remove(landscape)
+            randpiles["landscapes"].remove(landscape)
 
     # TODO: pick project, way, trait
+
+    # TODO: pick any landscape (is last)
 
     #################################
     # PRINTING RESULTS
     #################################
 
-
     console.print(Panel.fit("Picked Cards"))
-    # TODO: COLOR based on victory/treasure, etc
     console.print("")
     console.print("        ─━═Kingdom Cards═━─        ", style='bold cyan')
     n = 1
     for kcard in pickedpiles["kingdoms"]:
         # Set color. For multi-types, the first chosen here is the priority color
-        if kcard['isTreasure']: color = "yellow"
-        elif kcard['isAttack']: color = "red"
-        elif kcard['isReaction']: color = "cyan"
-        elif kcard['isVictory']: color = "green"
+        if kcard.get('isTreasure'): color = "yellow"
+        elif kcard.get('isAttack'): color = "red"
+        elif kcard.get('isReaction'): color = "cyan"
+        elif kcard.get('isVictory'): color = "green"
         else: color = "white"
         # <3 and <20 for spacing. Num has to be combined with . old fashioned way for this to work
         console.print(f"{str(n) + '.' : <3} [{color}]{kcard['name'] : <27}[/{color}] ({kcard['set'].title()})")
         n += 1
-    console.print("")
 
 
     console.print("")
@@ -222,7 +230,7 @@ def main(argv):
         console.print(f"{str(n) + '.' : <3} [{color}]{landscape['name'] : <27}[/{color}] ({landscape['set'].title()})")
         n += 1
     console.print("")
-    # TODO: Color if project, way, trait, landmark
+
 
 
     console.print(Panel.fit("Copy/Paste Format for Online"))
