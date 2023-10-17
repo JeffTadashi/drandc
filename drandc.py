@@ -82,31 +82,34 @@ for setname, yamlname in SETNAME_TO_YAMLNAME.items():
 def main(argv):
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-k','--kingdom', type=int, help='COMING SOON')
-    parser.add_argument('-b','--base', type=int, help='COMING SOON')
-    parser.add_argument('--intrigue', type=int, help='COMING SOON')
-    parser.add_argument('--seaside', type=int, help='COMING SOON')
-    parser.add_argument('--alchemy', type=int, help='COMING SOON')
-    parser.add_argument('--prosperity', type=int, help='COMING SOON')
-    parser.add_argument('--cornucopia', type=int, help='COMING SOON')
-    parser.add_argument('--hinterlands', type=int, help='COMING SOON')
-    parser.add_argument('--dark-ages', type=int, help='COMING SOON')
-    parser.add_argument('--guilds', type=int, help='COMING SOON')
-    parser.add_argument('--adventures', type=int, help='COMING SOON')
-    parser.add_argument('--empires', type=int, help='COMING SOON')
-    parser.add_argument('--nocturne', type=int, help='COMING SOON')
-    parser.add_argument('--renaissance', type=int, help='COMING SOON')
-    parser.add_argument('--menagerie', type=int, help='COMING SOON')
-    parser.add_argument('--allies', type=int, help='COMING SOON')
-    parser.add_argument('--plunder', type=int, help='COMING SOON')
-    parser.add_argument('--promos', type=int, help='COMING SOON')
-    parser.add_argument('-l', '--landscape', type=int, help='COMING SOON') #TODO: these have to be picked last (beyond events)
-    parser.add_argument('-e', '--event', type=int, help='COMING SOON') #TODO: these have to be picked last
-    parser.add_argument('--event-adventures', type=int, help='COMING SOON')
-    parser.add_argument('--event-empires', type=int, help='COMING SOON')
-    parser.add_argument('--event-menagerie', type=int, help='COMING SOON')
-    parser.add_argument('--event-plunder', type=int, help='COMING SOON')
-    parser.add_argument('--landmark', type=int, help='COMING SOON')
+    parser.add_argument('-k','--kingdom', type=int, help='# of kingdom cards from any/all sets')
+    parser.add_argument('-b','--base', type=int, help='# of kingdom cards from Dominion Base (2nd Edition)')
+    parser.add_argument('--intrigue', type=int, help='# of kingdom cards from Intrigue (2nd Edition)')
+    parser.add_argument('--seaside', type=int, help='# of kingdom cards from Seaside (2nd Edition)')
+    parser.add_argument('--alchemy', type=int, help='# of kingdom cards from Alchemy')
+    parser.add_argument('--prosperity', type=int, help='# of kingdom cards from Prosperity (2nd Edition)')
+    parser.add_argument('--cornucopia', type=int, help='# of kingdom cards from Cornucopia')
+    parser.add_argument('--hinterlands', type=int, help='# of kingdom cards from Hinterlands (2nd Edition)')
+    parser.add_argument('--dark-ages', type=int, help='# of kingdom cards from Dark Ages')
+    parser.add_argument('--guilds', type=int, help='# of kingdom cards from Guilds')
+    parser.add_argument('--adventures', type=int, help='# of kingdom cards from Adventures')
+    parser.add_argument('--empires', type=int, help='# of kingdom cards from Empires')
+    parser.add_argument('--nocturne', type=int, help='# of kingdom cards from Nocturne')
+    parser.add_argument('--renaissance', type=int, help='# of kingdom cards from Renaissance')
+    parser.add_argument('--menagerie', type=int, help='# of kingdom cards from Menagerie')
+    parser.add_argument('--allies', type=int, help='# of kingdom cards from Allies')
+    parser.add_argument('--plunder', type=int, help='# of kingdom cards from Plunder')
+    parser.add_argument('--promos', type=int, help='# of kingdom cards from Promos')
+    parser.add_argument('-l', '--landscape', type=int, help='# of landscapes from any/all sets')
+    parser.add_argument('-e', '--event', type=int, help='# of events from any/all sets')
+    parser.add_argument('--event-adventures', type=int, help='# of events from Adventures')
+    parser.add_argument('--event-empires', type=int, help='# of events from Empires')
+    parser.add_argument('--event-menagerie', type=int, help='# of events from Menagerie')
+    parser.add_argument('--event-plunder', type=int, help='# of events from Plunder')
+    parser.add_argument('--landmark', type=int, help='# of landmarks (exclusive to Empires)')
+    parser.add_argument('--project', type=int, help='# of projects (exclusive to Renaissance)')
+    parser.add_argument('--way', type=int, help='# of ways (exclusive to Menagerie)')
+    parser.add_argument('--trait', type=int, help='# of traits (exclusive to Plunder)')
     args = parser.parse_args()
 
 
@@ -173,7 +176,21 @@ def main(argv):
                     pickedpiles["landscapes"].append(landscape)
                     randpiles["landscapes"].remove(landscape)
     
-    # PICK ANY EVENTS (TODO)
+    # PICK ANY EVENTS
+    # Check if the "plain" event attribute is non-zero
+    num_events = getattr(args, 'event')
+    if num_events:
+        # First, make sub-list of landscapes that matches this type
+        sublist = []
+        for landscape in randpiles["landscapes"]:
+            if landscape["type"] == "event":
+                sublist.append(landscape)
+        # Next, pick the total random landscapes needed from this sublist
+        picked_landscapes = random.sample(sublist, num_events)
+        # Put these landscapes into the pickedpiles, and remove from randpiles
+        for landscape in picked_landscapes:
+            pickedpiles["landscapes"].append(landscape)
+            randpiles["landscapes"].remove(landscape)   
 
     # PICK LANDMARKS
     # (Note: only in Empires)
@@ -192,9 +209,67 @@ def main(argv):
             pickedpiles["landscapes"].append(landscape)
             randpiles["landscapes"].remove(landscape)
 
-    # TODO: pick project, way, trait
+    # PICK PROJECTS
+    # (Note: only in Renaissance)
+    # Check if the project attribute is non-zero
+    num_projects = getattr(args, 'project')
+    if num_projects:
+        # First, make sub-list of landscapes that matches this type
+        sublist = []
+        for landscape in randpiles["landscapes"]:
+            if landscape["type"] == "project":
+                sublist.append(landscape)
+        # Next, pick the total random landscapes needed from this sublist
+        picked_landscapes = random.sample(sublist, num_projects)
+        # Put these landscapes into the pickedpiles, and remove from randpiles
+        for landscape in picked_landscapes:
+            pickedpiles["landscapes"].append(landscape)
+            randpiles["landscapes"].remove(landscape)
 
-    # TODO: pick any landscape (is last)
+    # PICK WAYS
+    # (Note: only in Menagerie)
+    # Check if the way attribute is non-zero
+    num_ways = getattr(args, 'way')
+    if num_ways:
+        # First, make sub-list of landscapes that matches this type
+        sublist = []
+        for landscape in randpiles["landscapes"]:
+            if landscape["type"] == "way":
+                sublist.append(landscape)
+        # Next, pick the total random landscapes needed from this sublist
+        picked_landscapes = random.sample(sublist, num_ways)
+        # Put these landscapes into the pickedpiles, and remove from randpiles
+        for landscape in picked_landscapes:
+            pickedpiles["landscapes"].append(landscape)
+            randpiles["landscapes"].remove(landscape)
+
+    # PICK Trait
+    # (Note: only in Plunder)
+    # Check if the trait attribute is non-zero
+    num_traits = getattr(args, 'trait')
+    if num_traits:
+        # First, make sub-list of landscapes that matches this type
+        sublist = []
+        for landscape in randpiles["landscapes"]:
+            if landscape["type"] == "trait":
+                sublist.append(landscape)
+        # Next, pick the total random landscapes needed from this sublist
+        picked_landscapes = random.sample(sublist, num_traits)
+        # Put these landscapes into the pickedpiles, and remove from randpiles
+        for landscape in picked_landscapes:
+            pickedpiles["landscapes"].append(landscape)
+            randpiles["landscapes"].remove(landscape)
+
+    # PICK ANY LANDSCAPE
+    num_landscapes = getattr(args, "landscape")
+    if num_landscapes:
+        # Next, pick the total random landscapes needed from the remaining randpile
+        picked_landscapes = random.sample(randpiles["landscapes"], num_landscapes)
+        # Put these landscapes into the pickedpiles, and remove from randpiles
+        for landscape in picked_landscapes:
+            pickedpiles["landscapes"].append(landscape)
+            randpiles["landscapes"].remove(landscape)
+
 
     #################################
     # PRINTING RESULTS
