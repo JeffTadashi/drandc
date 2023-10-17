@@ -1,2 +1,2 @@
 # drandc
-Dominion Randomizer CLI!
+Dominion Randomizer from Console!

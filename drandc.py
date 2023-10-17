@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# TODO: Handle "encampment / plunder" on copy/paste. should only produce "encampment"
+
 import argparse
 import pathlib
 import random
@@ -76,10 +78,26 @@ for setname, yamlname in SETNAME_TO_YAMLNAME.items():
 
 
 
+banner_1 = r'''
+______                     _ _____ 
+|  _  \                   | /  __ \
+| | | |_ __ __ _ _ __   __| | /  \/
+| | | | '__/ _` | '_ \ / _` | |    
+| |/ /| | | (_| | | | | (_| | \__/\
+|___/ |_|  \__,_|_| |_|\__,_|\____/
+'''
+banner_2 = '''
+    by JeffTadashi
+   version 0.1
+  https://github.com/JeffTadashi/drandc
 
+'''
 
 
 def main(argv):
+
+    console.print(banner_1, style='bold', highlight=False)
+    console.print(banner_2)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-k','--kingdom', type=int, help='# of kingdom cards from any/all sets')
@@ -275,7 +293,7 @@ def main(argv):
     # PRINTING RESULTS
     #################################
 
-    console.print(Panel.fit("Picked Cards"))
+    console.print(Panel.fit("Picked Cards"), style='bold')
     console.print("")
     console.print("        ─━═Kingdom Cards═━─        ", style='bold cyan')
     n = 1
@@ -308,7 +326,7 @@ def main(argv):
 
 
 
-    console.print(Panel.fit("Copy/Paste Format for Online"))
+    console.print(Panel.fit("Copy/Paste Format for Online"), style='bold')
     comstring = ''
     for kcard in pickedpiles["kingdoms"]:
         if not comstring:
