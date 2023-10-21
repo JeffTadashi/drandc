@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-# TODO: Handle "encampment / plunder" on copy/paste. should only produce "encampment"
+# TODO: print inputs in "english"
+# TODO: print fun fact: how many combinations were possible on this choice
+# TODO: copy to clipboard automatically with https://github.com/asweigart/pyperclip
 
 import argparse
 import pathlib
@@ -128,9 +130,23 @@ def main(argv):
     parser.add_argument('--project', type=int, help='# of projects (exclusive to Renaissance)')
     parser.add_argument('--way', type=int, help='# of ways (exclusive to Menagerie)')
     parser.add_argument('--trait', type=int, help='# of traits (exclusive to Plunder)')
+    parser.add_argument('-s', '--set', type=int, help='Simple # of sets picked randomly. Using this overrides all kingdom/landmark operations')
     args = parser.parse_args()
 
 
+    #################################
+    # SIMPLE PICK THE SET (IF USING)
+    #################################
+    if args.set:
+        picked_sets = random.sample(sorted(SETNAME_TO_YAMLNAME), args.set)
+        console.print(Panel.fit("Picked Sets"), style='bold')
+        n = 1
+        for setname in picked_sets:
+            # <3 for spacing. Num has to be combined with . old fashioned way for this to work
+            console.print(f"{str(n) + '.' : <3} {setname.title()} ")
+            n += 1
+        # Exiting, as all other arguments are ignored
+        sys.exit()
 
     #################################
     # PICK THE CARDS
@@ -304,6 +320,8 @@ def main(argv):
         elif kcard.get('isReaction'): color = "cyan"
         elif kcard.get('isVictory'): color = "green"
         else: color = "white"
+        # Manual exception: Harem now is known as Farm
+        if kcard['name'] == 'Harem': kcard['name'] = 'Harem (Farm)'
         # <3 and <20 for spacing. Num has to be combined with . old fashioned way for this to work
         console.print(f"{str(n) + '.' : <3} [{color}]{kcard['name'] : <27}[/{color}] ({kcard['set'].title()})")
         n += 1
@@ -329,6 +347,15 @@ def main(argv):
     console.print(Panel.fit("Copy/Paste Format for Online"), style='bold')
     comstring = ''
     for kcard in pickedpiles["kingdoms"]:
+        # if kcard is split pile (e.g. "Gladiator / Fortune"), only use the first card name.
+        # (This is the format online Dominion uses)
+        if r"/" in kcard['name']:
+            # Use partition to separate before "/" and after. 
+            kcard['name'], unused_sep, unused_tail = kcard['name'].partition(r"/")
+            # Remove extra space at end
+            kcard['name'] = kcard['name'].strip()
+        # Manual exception: Harem now is known as Farm
+        if 'Harem' in kcard['name']: kcard['name'] = 'Farm'
         if not comstring:
             # If first entry, don't add comma
             comstring = f"{kcard['name']}"
