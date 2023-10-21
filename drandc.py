@@ -51,9 +51,9 @@ LANDSCAPE_NAMES_TO_NAME = {
 '''
 Create Randomizer Piles (one for Kingdom, one for Landscape)
 kingdoms:
-   [list of cards] - card has key/value of set
+   [list of cards as dicts] - card has additional key/value of set
 landscapes:
-   [list of landscapes] - card has key/value of set, and key/value of the type of landscape
+   [list of landscapes as dicts] - card has additional key/value of set, and additional key/value of the type of landscape
 
 This list will be modified/deleted to track what cards were taken. Those cards will be "moved" to pickedpiles.
 '''
@@ -153,11 +153,11 @@ def main(argv):
     #################################
     """
     GET KINGDOM AND LANDSCAPES!
-
-    PICKED PILES: NEW WAY:
+    
+    Main data piece:
         pickedpiles = {
-            kingdoms:
-            landscapes:
+            kingdoms: [each card (as dict)]
+            landscapes: [each landscape (as dict)]
         }
     """
     pickedpiles = {
@@ -277,7 +277,7 @@ def main(argv):
             pickedpiles["landscapes"].append(landscape)
             randpiles["landscapes"].remove(landscape)
 
-    # PICK Trait
+    # PICK TRAITS
     # (Note: only in Plunder)
     # Check if the trait attribute is non-zero
     num_traits = getattr(args, 'trait')
